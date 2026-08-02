@@ -1,0 +1,106 @@
+@import 'tailwindcss';
+@plugin 'tailwindcss-animate';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --radius-lg: var(--radius);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-sm: calc(var(--radius) - 4px);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-sidebar: var(--sidebar-background);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root,
+.dark {
+    color-scheme: light;
+    --background: #f4f7f1;
+    --foreground: #17251b;
+    --card: #ffffff;
+    --card-foreground: #17251b;
+    --popover: #ffffff;
+    --popover-foreground: #17251b;
+    --primary: #075313;
+    --primary-foreground: #ffffff;
+    --secondary: #f0e9c5;
+    --secondary-foreground: #4d4200;
+    --muted: #edf2ea;
+    --muted-foreground: #5c6a60;
+    --accent: #f8efb6;
+    --accent-foreground: #3d3500;
+    --destructive: #b42318;
+    --destructive-foreground: #ffffff;
+    --border: #d5dfd2;
+    --input: #cbd8c8;
+    --ring: #c5a91b;
+    --radius: 0.75rem;
+    --sidebar-background: #063d1f;
+    --sidebar-foreground: #f7fff8;
+    --sidebar-primary: #e6c527;
+    --sidebar-primary-foreground: #17330e;
+    --sidebar-accent: #0b5429;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #2c6942;
+    --sidebar-ring: #f0d642;
+}
+
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--border);
+    }
+    html {
+        background: var(--background);
+    }
+    body {
+        @apply bg-background text-foreground antialiased;
+    }
+    button,
+    a,
+    input,
+    select,
+    textarea {
+        @apply focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none;
+    }
+}
+
+@layer utilities {
+    .msv-page {
+        @apply mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8;
+    }
+    .msv-card {
+        @apply border-border bg-card rounded-2xl border shadow-sm;
+    }
+    .msv-label {
+        @apply text-xs font-bold tracking-[0.16em] text-[#856f00] uppercase;
+    }
+}
