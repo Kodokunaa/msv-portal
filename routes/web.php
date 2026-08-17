@@ -12,6 +12,14 @@ use Inertia\Inertia;
 
 Route::get('/', fn () => Inertia::render('welcome'))->name('home');
 Route::get('/whitepaper', fn () => Inertia::render('whitepaper'))->name('whitepaper');
+Route::get('/whitepaper/download', function () {
+    $path = base_path('output/pdf/msv-member-portal-whitepaper.pdf');
+    abort_unless(is_file($path), 404);
+
+    return response()->download($path, 'MSV-Member-Portal-White-Paper.pdf', [
+        'Content-Type' => 'application/pdf',
+    ]);
+})->name('whitepaper.download');
 
 Route::get('/account/pending', function (Request $request) {
     if ($request->user()?->accountStatus?->code === 'active') {

@@ -6,6 +6,7 @@ import {
     BookOpen,
     Check,
     Database,
+    Download,
     FileCheck2,
     FileText,
     Gauge,
@@ -170,6 +171,13 @@ export default function Whitepaper({ auth }: WhitepaperProps) {
                         </Link>
 
                         <div className="flex items-center gap-2">
+                            <a
+                                href="/whitepaper/download"
+                                download
+                                className="hidden items-center gap-2 rounded-lg bg-[#e6c527] px-4 py-2 text-sm font-bold text-[#063d1f] transition hover:bg-[#f2d743] md:flex"
+                            >
+                                <Download className="h-4 w-4" /> Download PDF
+                            </a>
                             <button
                                 type="button"
                                 onClick={() => window.print()}
@@ -226,6 +234,13 @@ export default function Whitepaper({ auth }: WhitepaperProps) {
                                     >
                                         Apply for membership
                                     </Link>
+                                    <a
+                                        href="/whitepaper/download"
+                                        download
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/35 px-6 py-3.5 text-center text-sm font-semibold text-white transition hover:bg-white/10"
+                                    >
+                                        <Download className="h-4 w-4" /> Download PDF
+                                    </a>
                                 </div>
                             </div>
 

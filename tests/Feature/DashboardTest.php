@@ -15,6 +15,14 @@ class DashboardTest extends TestCase
         $this->get('/whitepaper')->assertOk();
     }
 
+    public function test_whitepaper_pdf_can_be_downloaded()
+    {
+        $this->get('/whitepaper/download')
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertDownload('MSV-Member-Portal-White-Paper.pdf');
+    }
+
     public function test_guests_are_redirected_to_the_login_page()
     {
         $this->get('/dashboard')->assertRedirect('/login');
