@@ -10,6 +10,11 @@ class DashboardTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_whitepaper_is_publicly_accessible()
+    {
+        $this->get('/whitepaper')->assertOk();
+    }
+
     public function test_guests_are_redirected_to_the_login_page()
     {
         $this->get('/dashboard')->assertRedirect('/login');

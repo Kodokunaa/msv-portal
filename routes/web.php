@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', fn () => Inertia::render('welcome'))->name('home');
+Route::get('/whitepaper', fn () => Inertia::render('whitepaper'))->name('whitepaper');
 
 Route::get('/account/pending', function (Request $request) {
     if ($request->user()?->accountStatus?->code === 'active') {

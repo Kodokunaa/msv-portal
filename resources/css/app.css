@@ -104,3 +104,24 @@
         @apply text-xs font-bold tracking-[0.16em] text-[#856f00] uppercase;
     }
 }
+
+@media print {
+    .whitepaper-no-print {
+        display: none !important;
+    }
+
+    html,
+    body {
+        background: white !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+
+    section {
+        break-inside: avoid;
+    }
+
+    details > * {
+        display: block !important;
+    }
+}

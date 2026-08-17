@@ -52,6 +52,10 @@ export default function Welcome({ auth }: WelcomePageProps) {
                         </Link>
 
                         <nav className="hidden items-center gap-7 md:flex">
+                            <Link href="/whitepaper" className="text-sm font-medium text-slate-600 transition hover:text-[#075313]">
+                                White Paper
+                            </Link>
+
                             <a href="#about" className="text-sm font-medium text-slate-600 transition hover:text-[#075313]">
                                 About
                             </a>
