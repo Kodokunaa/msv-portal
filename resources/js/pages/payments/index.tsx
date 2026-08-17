@@ -115,7 +115,7 @@ export default function Payments({
         router.get('/payments', {}, { preserveState: true, replace: true });
     };
 
-    const voidPayment = (payment: Payment) => {
+    const deletePayment = (payment: Payment) => {
         const reason = window.prompt('Why should this payment record be voided?');
         if (!reason?.trim()) return;
         router.delete(`/payments/${payment.id}`, { data: { reason: reason.trim() }, preserveScroll: true });
@@ -130,7 +130,7 @@ export default function Payments({
                     <h1 className="mt-1 text-3xl font-bold text-[#063d1f]">{canManage ? 'Member payment records' : 'My payment history'}</h1>
                     <p className="text-muted-foreground mt-2 text-sm">
                         {canManage
-                            ? 'Create, update, filter, and safely void member payment entries.'
+                            ? 'Create, update, filter, and delete member payment entries.'
                             : 'Only payment records connected to your account are displayed.'}
                     </p>
                 </div>
@@ -363,9 +363,9 @@ export default function Payments({
                                                         </button>
                                                         <button
                                                             type="button"
-                                                            onClick={() => voidPayment(payment)}
+                                                            onClick={() => deletePayment(payment)}
                                                             className="rounded-md p-2 text-rose-600 hover:bg-rose-50"
-                                                            title="Void record"
+                                                            title="Delete record"
                                                         >
                                                             <Trash2 className="size-4" />
                                                         </button>

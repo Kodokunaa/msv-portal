@@ -10,10 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = ['first_name', 'last_name', 'email', 'password'];
 
@@ -107,17 +108,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return count($this->activeCouncilIds()) > 0;
     }
 
-    public function canManageCouncil(?int $councilId): bool
+    public function canManageCouncil(?int $councilId = null): bool
     {
-        if ($this->isManager()) {
-            return true;
-        }
+        return $this->isAdmin();
+    }
 
-        if (! $this->hasRole('admin') || ! $councilId) {
-            return false;
-        }
-
-        return in_array($councilId, $this->activeCouncilIds(), true);
+    public function canManageRecords(): bool
+    {
+        return $this->isAdmin();
     }
 
     public function isManager(): bool
@@ -128,5 +126,29 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isAdmin(): bool
     {
         return $this->isManager() || $this->hasRole('admin');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toApiArray(): array
+    {
+        $this->loadMissing([
+            'accountStatus:id,code,name',
+            'activeRoles:id,code,name',
+            'memberProfile.provincialCouncil:id,name',
+        ]);
+
+        return [
+            'id' => $this->id,
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name,
+            'name' => $this->name,
+            'email' => $this->email,
+            'status' => $this->accountStatus?->code,
+            'roles' => $this->activeRoles->pluck('code')->values(),
+            'is_admin' => $this->isAdmin(),
+            'is_manager' => $this->isManager(),
+        ];
     }
 }

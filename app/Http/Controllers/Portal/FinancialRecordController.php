@@ -112,6 +112,6 @@ class FinancialRecordController extends Controller
         ]);
         AuditLog::record($request, 'financial.voided', FinancialRecord::class, $financialRecord->id, $old, $financialRecord->fresh()->toArray());
 
-        return back()->with('success', 'Financial record voided and retained in the audit history.');
+        return back()->with('success', 'Financial record voided.');
     }
 }

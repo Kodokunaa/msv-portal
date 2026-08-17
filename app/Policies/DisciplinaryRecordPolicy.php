@@ -10,26 +10,17 @@ class DisciplinaryRecordPolicy
 {
     public function view(User $user, DisciplinaryRecord $record): bool
     {
-        if ($user->isManager()) {
-            return true;
-        }
-
-        if ($user->hasRole('admin')) {
-            return $user->canManageCouncil($record->memberProfile?->provincial_council_id);
-        }
-
-        return $record->visibility === 'organization'
-            || ($record->visibility === 'member' && $record->memberProfile?->user_id === $user->id);
+        return true;
     }
 
     public function create(User $user, MemberProfile $memberProfile): bool
     {
-        return $user->canManageCouncil($memberProfile->provincial_council_id);
+        return $user->canManageRecords();
     }
 
     public function update(User $user, DisciplinaryRecord $record): bool
     {
-        return $user->canManageCouncil($record->memberProfile?->provincial_council_id);
+        return $user->canManageRecords();
     }
 
     public function delete(User $user, DisciplinaryRecord $record): bool

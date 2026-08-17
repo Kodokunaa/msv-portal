@@ -5,71 +5,65 @@ import type { BreadcrumbItem, SharedData } from '@/types';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowRight, CreditCard, FileWarning, Landmark, ShieldCheck, Users } from 'lucide-react';
 
-const breadcrumbs: BreadcrumbItem[] = [{ title: 'Dashboard', href: '/dashboard' }];
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Admin Dashboard', href: '/admin/dashboard' }];
 const money = (value: number) => new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
 
 type Props = {
     role: string;
-    council: string | null;
-    stats: { members: number | null; pending: number | null; income: number; expenses: number; balance: number; payments: number };
+    stats: { members: number; pending: number; income: number; expenses: number; balance: number; payments: number };
     recentActivity: Array<{ action: string; entity_type: string; created_at: string; first_name: string | null; last_name: string | null }>;
 };
 
-export default function Dashboard({ role, council, stats, recentActivity }: Props) {
+export default function AdminDashboard({ role, stats, recentActivity }: Props) {
     const { auth } = usePage<SharedData>().props;
     const cards = [
         {
             title: 'Financial transparency',
             value: money(stats.balance),
-            note: 'Current recorded balance',
+            note: auth.user?.is_manager ? 'Manager can add, edit, and delete' : 'Visible to members; Manager edits only',
             icon: Landmark,
             href: '/financial-records',
         },
         {
-            title: auth.user?.is_admin ? 'Payment records' : 'My payments',
+            title: 'Payment records',
             value: String(stats.payments),
-            note: auth.user?.is_admin ? 'Records available to manage' : 'Personal payment entries',
+            note: 'Manage all member payments',
             icon: CreditCard,
             href: '/payments',
         },
-        ...(auth.user?.is_admin
-            ? [
-                  {
-                      title: 'Approved members',
-                      value: String(stats.members ?? 0),
-                      note: `${stats.pending ?? 0} pending application(s)`,
-                      icon: Users,
-                      href: '/management/members',
-                  },
-              ]
-            : []),
-        { title: 'Disciplinary records', value: 'View', note: 'Read-only for members', icon: FileWarning, href: '/disciplinary-records' },
+        {
+            title: 'Approved members',
+            value: String(stats.members),
+            note: `${stats.pending} pending application(s)`,
+            icon: Users,
+            href: '/management/members',
+        },
+        {
+            title: 'Disciplinary records',
+            value: 'Manage',
+            note: 'Add, edit, or delete cases',
+            icon: FileWarning,
+            href: '/disciplinary-records',
+        },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+            <Head title="Admin Dashboard" />
             <main className="msv-page space-y-6">
-                <section className="relative overflow-hidden rounded-3xl bg-[#063d1f] px-6 py-8 text-white shadow-lg sm:px-9 sm:py-10">
-                    <div className="absolute -top-24 -right-20 size-72 rounded-full bg-[#e6c527]/20 blur-3xl" />
+                <section className="relative overflow-hidden rounded-3xl bg-[#063d1f] px-6 py-8 text-white sm:px-9 sm:py-10">
                     <div className="relative flex flex-col justify-between gap-8 md:flex-row md:items-end">
                         <div>
                             <div className="mb-4 flex flex-wrap gap-2">
                                 <Badge className="bg-[#e6c527] text-[#17330e] hover:bg-[#e6c527]">{role}</Badge>
                                 <Badge variant="outline" className="border-white/30 text-white">
-                                    Active account
+                                    Organization-wide access
                                 </Badge>
                             </div>
-                            <p className="text-sm font-semibold tracking-[0.16em] text-[#f2d94d] uppercase">MSV Member Portal</p>
+                            <p className="text-sm font-semibold tracking-[0.16em] text-[#f2d94d] uppercase">MSV Administration</p>
                             <h1 className="mt-2 text-3xl font-bold sm:text-4xl">Welcome, {auth.user?.first_name}</h1>
                             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/75 sm:text-base">
-                                Review your membership information and access organizational records from one secure dashboard.
-                            </p>
-                        </div>
-                        <div className="rounded-2xl border border-white/15 bg-white/10 px-5 py-4 backdrop-blur">
-                            <p className="text-xs text-white/60">Assigned council</p>
-                            <p className="mt-1 font-semibold">
-                                {council || (auth.user?.is_admin ? 'Organization-wide access' : 'No council assigned')}
+                                Approve members and manage payment and disciplinary records. Financial changes stay with the Manager.
                             </p>
                         </div>
                     </div>
@@ -77,11 +71,7 @@ export default function Dashboard({ role, council, stats, recentActivity }: Prop
 
                 <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     {cards.map((card) => (
-                        <Link
-                            key={card.title}
-                            href={card.href}
-                            className="group msv-card p-5 transition hover:-translate-y-0.5 hover:border-[#c7aa19] hover:shadow-md"
-                        >
+                        <Link key={card.title} href={card.href} className="group msv-card p-5 transition hover:border-[#c7aa19]">
                             <div className="flex items-start justify-between gap-4">
                                 <div className="flex size-11 items-center justify-center rounded-xl bg-[#e9f2e7] text-[#075313]">
                                     <card.icon className="size-5" />
@@ -96,7 +86,7 @@ export default function Dashboard({ role, council, stats, recentActivity }: Prop
                 </section>
 
                 <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-                    <Card className="border-border shadow-sm">
+                    <Card className="border-border">
                         <CardHeader>
                             <CardTitle className="text-[#063d1f]">Financial overview</CardTitle>
                         </CardHeader>
@@ -116,21 +106,21 @@ export default function Dashboard({ role, council, stats, recentActivity }: Prop
                         </CardContent>
                     </Card>
 
-                    <Card className="border-border shadow-sm">
+                    <Card className="border-border">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-[#063d1f]">
-                                <ShieldCheck className="size-5" /> Access and security
+                                <ShieldCheck className="size-5" /> Access
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="text-muted-foreground space-y-3 text-sm">
-                            <p>Financial records are visible to approved users, but only the Manager can change them.</p>
-                            <p>Member payment history is restricted to the account owner unless viewed by an Admin or Manager.</p>
+                            <p>Admins can approve members and manage all payment and disciplinary records.</p>
+                            <p>Only the Manager can create, update, or delete financial records.</p>
                         </CardContent>
                     </Card>
                 </section>
 
                 {auth.user?.is_manager && recentActivity.length > 0 && (
-                    <Card className="border-border shadow-sm">
+                    <Card className="border-border">
                         <CardHeader>
                             <CardTitle className="text-[#063d1f]">Recent system activity</CardTitle>
                         </CardHeader>

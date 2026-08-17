@@ -19,7 +19,7 @@ class PaymentController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $canManage = $user->isManager() || ($user->hasRole('admin') && $user->hasProvincialScope());
+        $canManage = $user->canManageRecords();
 
         $query = DB::table('payments')
             ->whereNull('payments.voided_at')
@@ -38,8 +38,6 @@ class PaymentController extends Controller
 
         if (! $canManage) {
             $query->where('users.id', $user->id);
-        } elseif (! $user->isManager()) {
-            $query->whereIn('member_profiles.provincial_council_id', $user->activeCouncilIds());
         }
 
         $search = trim($request->string('search')->toString());
@@ -69,10 +67,6 @@ class PaymentController extends Controller
             ->orderBy('users.last_name')
             ->orderBy('users.first_name');
 
-        if ($canManage && ! $user->isManager()) {
-            $memberQuery->whereIn('member_profiles.provincial_council_id', $user->activeCouncilIds());
-        }
-
         return Inertia::render('payments/index', [
             'payments' => $query
                 ->orderByDesc('payments.created_at')
@@ -88,7 +82,7 @@ class PaymentController extends Controller
             'canManage' => $canManage,
             'members' => $canManage ? $memberQuery->get() : [],
             'types' => DB::table('payment_types')->select('id', 'name')->orderBy('name')->get(),
-            'statuses' => DB::table('payment_statuses')->select('id', 'code', 'name')->orderBy('id')->get(),
+            'statuses' => DB::table('payment_statuses')->where('code', '!=', 'partial')->select('id', 'code', 'name')->orderBy('id')->get(),
         ]);
     }
 
@@ -134,9 +128,8 @@ class PaymentController extends Controller
             'voided_by' => $request->user()->id,
             'void_reason' => $request->validated('reason'),
         ]);
-
         AuditLog::record($request, 'payment.voided', Payment::class, $payment->id, $old, $payment->fresh()->toArray());
 
-        return back()->with('success', 'Payment record voided and retained in the audit history.');
+        return back()->with('success', 'Payment record voided.');
     }
 }

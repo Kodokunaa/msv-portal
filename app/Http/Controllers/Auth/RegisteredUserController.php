@@ -39,6 +39,7 @@ class RegisteredUserController extends Controller
                 'email' => $request->string('email')->lower()->toString(),
                 'password' => $request->string('password')->toString(),
             ]);
+            $user->refresh();
 
             MemberProfile::query()->create([
                 'user_id' => $user->id,

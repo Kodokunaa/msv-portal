@@ -27,11 +27,6 @@ class HandleInertiaRequests extends Middleware
             ]);
         }
 
-        $isProvincialAdmin = $user
-            && ! $user->isManager()
-            && $user->hasRole('admin')
-            && $user->activeCouncilAssignments->isNotEmpty();
-
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -49,12 +44,11 @@ class HandleInertiaRequests extends Middleware
                     'roles' => $user->activeRoles->pluck('code')->values(),
                     'is_admin' => $user->isAdmin(),
                     'is_manager' => $user->isManager(),
-                    'is_provincial_admin' => (bool) $isProvincialAdmin,
-                    'can_manage_records' => $user->isManager() || (bool) $isProvincialAdmin,
-                    'council' => ($user->isManager() || ($user->hasRole('admin') && ! $isProvincialAdmin))
+                    'is_provincial_admin' => false,
+                    'can_manage_records' => $user->canManageRecords(),
+                    'council' => $user->isAdmin()
                         ? null
-                        : ($user->activeCouncilAssignments->first()?->provincialCouncil?->name
-                            ?? $user->memberProfile?->provincialCouncil?->name),
+                        : $user->memberProfile?->provincialCouncil?->name,
                 ] : null,
             ],
             'flash' => [

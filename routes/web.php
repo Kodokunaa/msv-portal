@@ -26,7 +26,9 @@ Route::get('/account/pending', function (Request $request) {
     ->name('account.pending');
 
 Route::middleware(['auth', 'active', 'verified'])->group(function () {
-    Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, '__invoke'])->name('dashboard');
+    Route::get('/member/dashboard', [DashboardController::class, 'member'])->name('dashboard.member');
+    Route::get('/admin/dashboard', [DashboardController::class, 'admin'])->name('dashboard.admin');
     Route::get('/financial-records', [FinancialRecordController::class, 'index'])
         ->name('financial.index');
     Route::get('/payments', [PaymentController::class, 'index'])

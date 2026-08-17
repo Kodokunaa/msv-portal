@@ -8,11 +8,7 @@ class UserPolicy
 {
     public function manage(User $actor, User $target): bool
     {
-        if ($actor->isManager()) {
-            return true;
-        }
-
-        return $actor->canManageCouncil($target->memberProfile?->provincial_council_id);
+        return $actor->canManageRecords();
     }
 
     public function changeRole(User $actor, User $target): bool

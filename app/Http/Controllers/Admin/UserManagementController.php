@@ -23,7 +23,7 @@ class UserManagementController extends Controller
     public function index(Request $request): Response
     {
         $actor = $request->user();
-        abort_unless($actor->isManager() || $actor->hasProvincialScope(), 403, 'A provincial council assignment is required to manage members.');
+        abort_unless($actor->canManageRecords(), 403);
 
         $query = User::query()
             ->with([
@@ -33,14 +33,6 @@ class UserManagementController extends Controller
                 'activeCouncilAssignments.provincialCouncil:id,name',
             ])
             ->latest();
-
-        if (! $actor->isManager()) {
-            if (! $actor->hasProvincialScope()) {
-                $query->whereRaw('1 = 0');
-            } else {
-                $query->whereHas('memberProfile', fn ($profile) => $profile->whereIn('provincial_council_id', $actor->activeCouncilIds()));
-            }
-        }
 
         $search = trim($request->string('search')->toString());
         $query
@@ -195,7 +187,7 @@ class UserManagementController extends Controller
 
         $this->replaceRole($request, $user, 'admin', 'user.promoted');
 
-        return back()->with('success', 'Member promoted to Admin. Assign a council before the account can manage records.');
+        return back()->with('success', 'Member promoted to Admin.');
     }
 
     public function demote(Request $request, User $user): RedirectResponse
@@ -244,7 +236,7 @@ class UserManagementController extends Controller
         $this->endCouncilAssignments($request, $user);
         AuditLog::record($request, 'admin.scope_removed', User::class, $user->id, ['provincial_council_ids' => $oldCouncilIds], ['provincial_council_ids' => []]);
 
-        return back()->with('success', 'Provincial scope removed. This Admin can no longer manage member records until another council is assigned.');
+        return back()->with('success', 'Provincial scope removed.');
     }
 
     private function changeStatus(Request $request, User $user, string $statusCode, string $reason, string $action): void

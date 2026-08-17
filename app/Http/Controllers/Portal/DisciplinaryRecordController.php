@@ -19,7 +19,7 @@ class DisciplinaryRecordController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $canManage = $user->isManager() || ($user->hasRole('admin') && $user->hasProvincialScope());
+        $canManage = $user->canManageRecords();
 
         $recordQuery = DB::table('disciplinary_records')
             ->whereNull('disciplinary_records.voided_at')
@@ -35,22 +35,6 @@ class DisciplinaryRecordController extends Controller
                 'disciplinary_statuses.code as status',
                 'disciplinary_statuses.name as status_name',
             );
-
-        if ($user->isManager()) {
-            // Organization-wide access.
-        } elseif ($canManage) {
-            $recordQuery->whereIn('member_profiles.provincial_council_id', $user->activeCouncilIds());
-        } else {
-            $profileId = $user->memberProfile?->id ?? 0;
-            $recordQuery->whereNotNull('disciplinary_records.published_at')
-                ->where(function ($query) use ($profileId) {
-                    $query->where('disciplinary_records.visibility', 'organization')
-                        ->orWhere(function ($query) use ($profileId) {
-                            $query->where('disciplinary_records.visibility', 'member')
-                                ->where('disciplinary_records.member_profile_id', $profileId);
-                        });
-                });
-        }
 
         $search = trim($request->string('search')->toString());
         $recordQuery
@@ -73,10 +57,6 @@ class DisciplinaryRecordController extends Controller
             ->select('member_profiles.id', 'users.first_name', 'users.last_name')
             ->orderBy('users.last_name')->orderBy('users.first_name');
 
-        if ($canManage && ! $user->isManager()) {
-            $memberQuery->whereIn('member_profiles.provincial_council_id', $user->activeCouncilIds());
-        }
-
         return Inertia::render('disciplinary-records/index', [
             'records' => $recordQuery->orderByDesc('incident_date')->orderByDesc('disciplinary_records.id')->paginate(20)->withQueryString(),
             'filters' => $request->only(['search', 'status', 'date_from', 'date_to']),
@@ -93,8 +73,8 @@ class DisciplinaryRecordController extends Controller
         $profile = MemberProfile::query()->findOrFail($data['member_profile_id']);
         $this->authorize('create', [DisciplinaryRecord::class, $profile]);
 
-        $data['visibility'] ??= 'organization';
-        $data['published_at'] = $data['visibility'] === 'private' ? null : now();
+        $data['visibility'] = 'organization';
+        $data['published_at'] = now();
         $record = DisciplinaryRecord::query()->create($data + ['created_by' => $request->user()->id]);
         if (! $record->case_number) {
             $record->update(['case_number' => 'MSV-CASE-'.now()->format('Y').'-'.str_pad((string) $record->id, 5, '0', STR_PAD_LEFT)]);
@@ -113,10 +93,8 @@ class DisciplinaryRecordController extends Controller
         $data = $request->validated();
         $newProfile = MemberProfile::query()->findOrFail($data['member_profile_id']);
         $this->authorize('create', [DisciplinaryRecord::class, $newProfile]);
-        $data['visibility'] ??= $disciplinaryRecord->visibility;
-        $data['published_at'] = $data['visibility'] === 'private'
-            ? null
-            : ($disciplinaryRecord->published_at ?? now());
+        $data['visibility'] = 'organization';
+        $data['published_at'] = $disciplinaryRecord->published_at ?? now();
 
         $old = $disciplinaryRecord->toArray();
         $disciplinaryRecord->update($data);
@@ -139,6 +117,6 @@ class DisciplinaryRecordController extends Controller
         ]);
         AuditLog::record($request, 'disciplinary.voided', DisciplinaryRecord::class, $disciplinaryRecord->id, $old, $disciplinaryRecord->fresh()->toArray());
 
-        return back()->with('success', 'Disciplinary record voided and retained in the audit history.');
+        return back()->with('success', 'Disciplinary record voided.');
     }
 }

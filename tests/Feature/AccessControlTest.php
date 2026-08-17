@@ -41,14 +41,14 @@ class AccessControlTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_unassigned_admin_cannot_open_member_management(): void
+    public function test_admin_can_open_member_management_without_a_council_assignment(): void
     {
         $admin = User::factory()->create();
         $this->giveRole($admin, 'admin');
 
         $this->actingAs($admin)
             ->get(route('members.index'))
-            ->assertForbidden();
+            ->assertOk();
     }
 
     public function test_scoped_admin_can_approve_a_pending_applicant(): void

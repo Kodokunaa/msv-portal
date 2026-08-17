@@ -10,7 +10,7 @@ A secure member-only web application built with Laravel 12, React 19, TypeScript
 - **Provincial Admin** — an Admin with an active council assignment; manages applications, members, payments, and disciplinary records only in that council.
 - **Manager** — organization-wide access, financial management, role administration, council assignments, and audit logs.
 
-An Admin without a council assignment receives no management scope. This prevents accidental organization-wide access.
+Admins have organization-wide member, payment, and disciplinary management access. Managers have those permissions plus exclusive financial CRUD, role administration, council assignments, and audit logs.
 
 ## Included modules
 
@@ -106,7 +106,21 @@ Never use the demonstration passwords in production.
 | Profile | `/settings/profile` |
 | Password | `/settings/password` |
 
-The application uses Laravel web routes and Inertia rather than a separate REST API. A Laravel Sanctum API can be added later for a mobile application or external integration without replacing the current web application.
+## REST API
+
+The application includes a Laravel Sanctum token API under `/api`:
+
+| Method | Endpoint | Access |
+|---|---|---|
+| POST | `/api/register` | Public; creates a Pending application |
+| POST | `/api/login` | Public; active accounts only |
+| POST | `/api/logout` | Authenticated |
+| POST | `/api/approve-user` | Admin or Manager |
+| GET/POST/PUT/DELETE | `/api/payments` | Member read-own; Admin/Manager manage |
+| GET/POST/PUT/DELETE | `/api/financial-records` | Approved members read; Manager manages |
+| GET/POST/PUT/DELETE | `/api/disciplinary-records` | Approved members read; Admin/Manager manage |
+
+DELETE operations require a `reason` and retain the record as voided for audit history.
 
 ## Production configuration
 
@@ -151,4 +165,4 @@ npm run format:check
 npm run build
 ```
 
-See `FULL_WEBAPP_IMPLEMENTATION.md` for the completed upgrade scope, remaining deployment decisions, and validation notes.
+Before production deployment, replace all local demonstration credentials, configure real mail delivery, enable secure cookies, and run the complete validation command set above.

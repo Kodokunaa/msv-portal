@@ -13,15 +13,7 @@ export function AppSidebarHeader({ breadcrumbs = [] }: { breadcrumbs?: Breadcrum
             </div>
             <div className="hidden text-right sm:block">
                 <p className="text-sm font-semibold text-[#063d1f]">{auth.user?.name}</p>
-                <p className="text-muted-foreground text-xs">
-                    {auth.user?.is_manager
-                        ? 'Manager'
-                        : auth.user?.is_provincial_admin
-                          ? 'Provincial Admin'
-                          : auth.user?.is_admin
-                            ? 'Admin'
-                            : 'Member'}
-                </p>
+                <p className="text-muted-foreground text-xs">{auth.user?.is_manager ? 'Manager' : auth.user?.is_admin ? 'Admin' : 'Member'}</p>
             </div>
         </header>
     );

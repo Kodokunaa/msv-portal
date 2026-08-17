@@ -13,18 +13,29 @@ class EnsureAccountIsActive
         $user = $request->user();
 
         if (! $user) {
+            if ($this->isApi($request)) {
+                abort(401);
+            }
+
             return redirect()->route('login');
         }
 
         $status = $user->accountStatus?->code;
 
         if ($status === 'pending') {
+            if ($this->isApi($request)) {
+                abort(403, 'Your account is pending approval.');
+            }
+
             return redirect()->route('account.pending');
         }
 
-        if ($status === 'rejected' || $status === 'suspended') {
-            auth()->logout();
+        if (in_array($status, ['rejected', 'suspended', 'deactivated'], true)) {
+            if ($this->isApi($request)) {
+                abort(403, 'Your account cannot currently access the member portal.');
+            }
 
+            auth()->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
@@ -40,5 +51,10 @@ class EnsureAccountIsActive
         }
 
         return $next($request);
+    }
+
+    private function isApi(Request $request): bool
+    {
+        return $request->expectsJson() || $request->is('api/*');
     }
 }

@@ -14,17 +14,17 @@ class PaymentPolicy
             return true;
         }
 
-        return $user->canManageCouncil($payment->memberProfile?->provincial_council_id);
+        return $user->canManageRecords();
     }
 
     public function create(User $user, MemberProfile $memberProfile): bool
     {
-        return $user->canManageCouncil($memberProfile->provincial_council_id);
+        return $user->canManageRecords();
     }
 
     public function update(User $user, Payment $payment): bool
     {
-        return $user->canManageCouncil($payment->memberProfile?->provincial_council_id);
+        return $user->canManageRecords();
     }
 
     public function delete(User $user, Payment $payment): bool

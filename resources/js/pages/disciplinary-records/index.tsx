@@ -26,7 +26,6 @@ type RecordItem = {
     incident_date: string;
     description: string;
     action_taken: string | null;
-    visibility: 'organization' | 'member' | 'private';
 };
 type Option = { id: number; name: string; code?: string; first_name?: string; last_name?: string };
 type Filters = { search?: string; status?: string; date_from?: string; date_to?: string };
@@ -67,14 +66,11 @@ export default function DisciplinaryRecords({
         incident_date: new Date().toISOString().slice(0, 10),
         description: '',
         action_taken: '',
-        notes: '',
-        visibility: 'organization',
     });
     const resetForm = () => {
         setEditingId(null);
         form.reset();
         form.setData('incident_date', new Date().toISOString().slice(0, 10));
-        form.setData('visibility', 'organization');
     };
     const submit: FormEventHandler<HTMLFormElement> = (event) => {
         event.preventDefault();
@@ -95,8 +91,6 @@ export default function DisciplinaryRecords({
             incident_date: record.incident_date.slice(0, 10),
             description: record.description,
             action_taken: record.action_taken || '',
-            notes: '',
-            visibility: record.visibility,
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -108,7 +102,7 @@ export default function DisciplinaryRecords({
         setFilterData({ search: '', status: '', date_from: '', date_to: '' });
         router.get('/disciplinary-records', {}, { preserveState: true, replace: true });
     };
-    const voidRecord = (record: RecordItem) => {
+    const deleteRecord = (record: RecordItem) => {
         const reason = window.prompt('Why should this disciplinary record be voided?');
         if (!reason?.trim()) return;
         router.delete(`/disciplinary-records/${record.id}`, { data: { reason: reason.trim() }, preserveScroll: true });
@@ -122,7 +116,7 @@ export default function DisciplinaryRecords({
                     <p className="msv-label">Disciplinary module</p>
                     <h1 className="mt-1 text-3xl font-bold text-[#063d1f]">Disciplinary records</h1>
                     <p className="text-muted-foreground mt-2 text-sm">
-                        Members receive read-only access to published records. Authorized administrators manage records within their assigned council.
+                        Members can view all disciplinary records. Only administrators can add, edit, or delete them.
                     </p>
                 </div>
 
@@ -247,19 +241,6 @@ export default function DisciplinaryRecords({
                                     />
                                     <InputError message={form.errors.case_number} />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label>Visibility</Label>
-                                    <select
-                                        className="border-input h-10 w-full rounded-md border bg-white px-3 text-sm"
-                                        value={form.data.visibility}
-                                        onChange={(e) => form.setData('visibility', e.target.value)}
-                                    >
-                                        <option value="organization">All approved members</option>
-                                        <option value="member">Affected member only</option>
-                                        <option value="private">Administrators only</option>
-                                    </select>
-                                    <InputError message={form.errors.visibility} />
-                                </div>
                                 <div className="space-y-2 md:col-span-2 xl:col-span-4">
                                     <Label>Description</Label>
                                     <textarea
@@ -305,9 +286,6 @@ export default function DisciplinaryRecords({
                                             <Badge className={`${statusStyle[record.status] || 'bg-slate-100 text-slate-700'} hover:bg-inherit`}>
                                                 {record.status_name}
                                             </Badge>
-                                            <Badge variant="outline" className="capitalize">
-                                                {record.visibility}
-                                            </Badge>
                                         </div>
                                         <p className="mt-1 text-sm font-medium text-[#856f00]">
                                             {record.case_number || `Case #${record.id}`} · {record.violation_type} ·{' '}
@@ -332,7 +310,7 @@ export default function DisciplinaryRecords({
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={() => voidRecord(record)}
+                                                onClick={() => deleteRecord(record)}
                                                 className="rounded-md p-2 text-rose-600 hover:bg-rose-50"
                                             >
                                                 <Trash2 className="size-4" />

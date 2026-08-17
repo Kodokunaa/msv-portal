@@ -102,7 +102,7 @@ export default function FinancialRecords({
         setFilterData({ search: '', type: '', council: '', date_from: '', date_to: '' });
         router.get('/financial-records', {}, { preserveState: true, replace: true });
     };
-    const voidRecord = (record: RecordItem) => {
+    const deleteRecord = (record: RecordItem) => {
         const reason = window.prompt('Why should this financial record be voided?');
         if (!reason?.trim()) return;
         router.delete(`/financial-records/${record.id}`, { data: { reason: reason.trim() }, preserveScroll: true });
@@ -361,7 +361,7 @@ export default function FinancialRecords({
                                                         </button>
                                                         <button
                                                             type="button"
-                                                            onClick={() => voidRecord(record)}
+                                                            onClick={() => deleteRecord(record)}
                                                             className="rounded-md p-2 text-rose-600 hover:bg-rose-50"
                                                         >
                                                             <Trash2 className="size-4" />
