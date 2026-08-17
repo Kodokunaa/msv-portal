@@ -104,6 +104,22 @@ class ApiAccessControlTest extends TestCase
         $this->getJson('/api/payments')->assertOk()->assertJsonCount(0, 'data');
     }
 
+    public function test_api_collection_page_size_is_bounded(): void
+    {
+        $member = $this->userWithRole('member');
+        $profile = $this->profile($member);
+        foreach (range(1, 105) as $index) {
+            $this->payment($profile);
+        }
+
+        Sanctum::actingAs($member);
+        $this->getJson('/api/payments?per_page=1000')
+            ->assertOk()
+            ->assertJsonCount(100, 'data')
+            ->assertJsonPath('meta.per_page', 100)
+            ->assertJsonPath('meta.current_page', 1);
+    }
+
     private function userWithRole(string $role): User
     {
         $user = User::factory()->create();

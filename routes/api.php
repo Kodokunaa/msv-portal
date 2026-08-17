@@ -7,8 +7,8 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\UserApprovalController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:api-auth');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:api-auth');
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);

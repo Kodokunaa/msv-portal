@@ -44,7 +44,17 @@ class PaymentController extends Controller
             $query->where('users.id', $user->id);
         }
 
-        return response()->json(['data' => $query->get()]);
+        $paginator = $query->simplePaginate($this->perPage($request));
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'next_page_url' => $paginator->nextPageUrl(),
+                'previous_page_url' => $paginator->previousPageUrl(),
+            ],
+        ]);
     }
 
     public function store(SavePaymentRequest $request): JsonResponse
@@ -90,5 +100,10 @@ class PaymentController extends Controller
         AuditLog::record($request, 'payment.voided', Payment::class, $payment->id, $old, $payment->fresh()->toArray());
 
         return response()->json(['message' => 'Payment record voided.']);
+    }
+
+    private function perPage(Request $request): int
+    {
+        return max(1, min($request->integer('per_page', 50), 100));
     }
 }

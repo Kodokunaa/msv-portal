@@ -130,11 +130,12 @@ Set at minimum:
 APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://your-domain.example
-SESSION_DRIVER=database
+SESSION_DRIVER=redis
 SESSION_SECURE_COOKIE=true
 SESSION_HTTP_ONLY=true
 SESSION_SAME_SITE=lax
 QUEUE_CONNECTION=database
+REDIS_CLIENT=phpredis
 MSV_MANAGER_EMAIL=manager@your-domain.example
 MSV_MANAGER_PASSWORD=use-a-strong-unique-password
 ```

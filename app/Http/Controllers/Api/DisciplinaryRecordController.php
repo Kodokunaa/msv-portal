@@ -9,11 +9,12 @@ use App\Models\AuditLog;
 use App\Models\DisciplinaryRecord;
 use App\Models\MemberProfile;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class DisciplinaryRecordController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $records = DB::table('disciplinary_records')
             ->whereNull('disciplinary_records.voided_at')
@@ -34,10 +35,19 @@ class DisciplinaryRecordController extends Controller
                 'disciplinary_statuses.name as status_name',
             )
             ->orderByDesc('disciplinary_records.incident_date')
-            ->orderByDesc('disciplinary_records.id')
-            ->get();
+            ->orderByDesc('disciplinary_records.id');
 
-        return response()->json(['data' => $records]);
+        $paginator = $records->simplePaginate($this->perPage($request));
+
+        return response()->json([
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'next_page_url' => $paginator->nextPageUrl(),
+                'previous_page_url' => $paginator->previousPageUrl(),
+            ],
+        ]);
     }
 
     public function store(SaveDisciplinaryRecordRequest $request): JsonResponse
@@ -91,5 +101,10 @@ class DisciplinaryRecordController extends Controller
         AuditLog::record($request, 'disciplinary.voided', DisciplinaryRecord::class, $disciplinaryRecord->id, $old, $disciplinaryRecord->fresh()->toArray());
 
         return response()->json(['message' => 'Disciplinary record voided.']);
+    }
+
+    private function perPage(Request $request): int
+    {
+        return max(1, min($request->integer('per_page', 50), 100));
     }
 }

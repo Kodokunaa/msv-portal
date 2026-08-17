@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Models\FinancialRecord;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -61,11 +62,11 @@ class FinancialRecordController extends Controller
             'records' => $query->orderByDesc('transaction_date')->orderByDesc('financial_records.id')->paginate(20)->withQueryString(),
             'summary' => ['income' => $income, 'expenses' => $expenses, 'balance' => $income - $expenses],
             'filters' => $request->only(['search', 'type', 'council', 'date_from', 'date_to']),
-            'categories' => DB::table('financial_categories')
+            'categories' => Cache::remember('portal.financial-categories', 3600, fn () => DB::table('financial_categories')
                 ->join('financial_record_types', 'financial_record_types.id', '=', 'financial_categories.financial_record_type_id')
                 ->select('financial_categories.id', 'financial_categories.name', 'financial_record_types.code as type')
-                ->orderBy('financial_categories.name')->get(),
-            'councils' => DB::table('provincial_councils')->select('id', 'name')->orderBy('name')->get(),
+                ->orderBy('financial_categories.name')->get()),
+            'councils' => Cache::remember('portal.councils', 3600, fn () => DB::table('provincial_councils')->select('id', 'name')->orderBy('name')->get()),
             'canManage' => $user->isManager(),
         ]);
     }
@@ -78,6 +79,7 @@ class FinancialRecordController extends Controller
         $data['published_at'] = $data['publication_status'] === 'published' ? now() : null;
 
         $record = FinancialRecord::query()->create($data + ['created_by' => $request->user()->id]);
+        Cache::forget('portal.financial-totals');
         AuditLog::record($request, 'financial.created', FinancialRecord::class, $record->id, null, $record->toArray());
 
         return back()->with('success', 'Financial record added.');
@@ -94,6 +96,7 @@ class FinancialRecordController extends Controller
 
         $old = $financialRecord->toArray();
         $financialRecord->update($data);
+        Cache::forget('portal.financial-totals');
         AuditLog::record($request, 'financial.updated', FinancialRecord::class, $financialRecord->id, $old, $financialRecord->fresh()->toArray());
 
         return back()->with('success', 'Financial record updated.');
@@ -110,6 +113,7 @@ class FinancialRecordController extends Controller
             'voided_by' => $request->user()->id,
             'void_reason' => $request->validated('reason'),
         ]);
+        Cache::forget('portal.financial-totals');
         AuditLog::record($request, 'financial.voided', FinancialRecord::class, $financialRecord->id, $old, $financialRecord->fresh()->toArray());
 
         return back()->with('success', 'Financial record voided.');

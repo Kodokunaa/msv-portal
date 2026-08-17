@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Models\FinancialRecord;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class FinancialRecordController extends Controller
@@ -38,12 +39,23 @@ class FinancialRecordController extends Controller
             $query->where('financial_records.publication_status', 'published');
         }
 
-        $rows = $query->get();
-        $income = (float) $rows->where('type', 'income')->sum('amount');
-        $expenses = (float) $rows->where('type', 'expense')->sum('amount');
+        $summaryRows = DB::query()
+            ->fromSub(clone $query, 'visible_financial_records')
+            ->selectRaw('type, COALESCE(SUM(amount), 0) as total')
+            ->groupBy('type')
+            ->pluck('total', 'type');
+        $income = (float) ($summaryRows['income'] ?? 0);
+        $expenses = (float) ($summaryRows['expense'] ?? 0);
+        $paginator = $query->simplePaginate($this->perPage($request));
 
         return response()->json([
-            'data' => $rows,
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'next_page_url' => $paginator->nextPageUrl(),
+                'previous_page_url' => $paginator->previousPageUrl(),
+            ],
             'summary' => [
                 'income' => $income,
                 'expenses' => $expenses,
@@ -60,6 +72,7 @@ class FinancialRecordController extends Controller
         $data['published_at'] = $data['publication_status'] === 'published' ? now() : null;
 
         $record = FinancialRecord::query()->create($data + ['created_by' => $request->user()->id]);
+        Cache::forget('portal.financial-totals');
         AuditLog::record($request, 'financial.created', FinancialRecord::class, $record->id, null, $record->toArray());
 
         return response()->json(['data' => $record->fresh()], 201);
@@ -76,6 +89,7 @@ class FinancialRecordController extends Controller
 
         $old = $financialRecord->toArray();
         $financialRecord->update($data);
+        Cache::forget('portal.financial-totals');
         AuditLog::record($request, 'financial.updated', FinancialRecord::class, $financialRecord->id, $old, $financialRecord->fresh()->toArray());
 
         return response()->json(['data' => $financialRecord->fresh()]);
@@ -92,8 +106,14 @@ class FinancialRecordController extends Controller
             'voided_by' => $request->user()->id,
             'void_reason' => $request->validated('reason'),
         ]);
+        Cache::forget('portal.financial-totals');
         AuditLog::record($request, 'financial.voided', FinancialRecord::class, $financialRecord->id, $old, $financialRecord->fresh()->toArray());
 
         return response()->json(['message' => 'Financial record voided.']);
+    }
+
+    private function perPage(Request $request): int
+    {
+        return max(1, min($request->integer('per_page', 50), 100));
     }
 }

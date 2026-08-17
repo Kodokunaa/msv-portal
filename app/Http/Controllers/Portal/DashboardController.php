@@ -8,6 +8,7 @@ use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,7 +29,7 @@ class DashboardController extends Controller
             return redirect()->route('dashboard.admin');
         }
 
-        $totals = $this->publishedFinancialTotals();
+        $totals = Cache::remember('portal.financial-totals', 30, fn () => $this->publishedFinancialTotals());
 
         return Inertia::render('dashboard/member', [
             'role' => 'Member',
@@ -53,7 +54,7 @@ class DashboardController extends Controller
             return redirect()->route('dashboard.member');
         }
 
-        $totals = $this->publishedFinancialTotals();
+        $totals = Cache::remember('portal.financial-totals', 30, fn () => $this->publishedFinancialTotals());
 
         return Inertia::render('dashboard/admin', [
             'role' => $user->isManager() ? 'Manager' : 'Admin',
